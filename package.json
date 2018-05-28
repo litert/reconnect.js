@@ -1,6 +1,6 @@
 {
   "name": "@litert/reconnect",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An auto-reconnect connection controller library.",
   "main": "./dist/index.js",
   "scripts": {

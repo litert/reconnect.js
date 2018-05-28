@@ -25,15 +25,23 @@ const HAS_READY_EVENT = parseInt(
         process.version.split(".", 2)[1]
     ) >= 11;
 
+export interface CreateOptions extends $Net.TcpNetConnectOpts {
+
+    /**
+     * The timeout in milliseconds for connecting to remote host.
+     */
+    connectTimeout?: number;
+}
+
 class TCPProvider
 extends EventEmitter
 implements ConnectionProvider<$Net.Socket, NodeJS.ErrnoException> {
 
     private _conn!: $Net.Socket;
 
-    private _opts: $Net.NetConnectOpts;
+    private _opts: CreateOptions;
 
-    public constructor(opts: $Net.NetConnectOpts) {
+    public constructor(opts: CreateOptions) {
 
         super();
 
@@ -45,6 +53,27 @@ implements ConnectionProvider<$Net.Socket, NodeJS.ErrnoException> {
         this.close();
 
         this._conn = $Net.createConnection(this._opts);
+
+        if (this._opts.connectTimeout && this._opts.connectTimeout > 0) {
+
+            this._conn.setTimeout(
+                this._opts.connectTimeout,
+                () => {
+                    const address = this._opts.host || "127.0.0.1";
+                    const e: any = new Error(
+                        `connect ECONNTIMEOUT ${address}:${this._opts.port}`
+                    );
+                    e.code = e.errno = "ECONNTIMEOUT";
+                    e.address = address;
+                    e.port = this._opts.port;
+                    e.syscall = "connect";
+                    this._conn.destroy(e);
+                }
+            ).once(
+                "connect",
+                () => this._conn.setTimeout(this._opts.timeout || 0)
+            );
+        }
 
         this._conn
         .on("close", () => this.emit("close"))
@@ -68,7 +97,7 @@ implements ConnectionProvider<$Net.Socket, NodeJS.ErrnoException> {
 }
 
 export function createTCPReonnector(
-    opts: $Net.NetConnectOpts
+    opts: CreateOptions
 ): Reconnector<$Net.Socket, NodeJS.ErrnoException> {
 
     return new DefaultReconnector<$Net.Socket, NodeJS.ErrnoException>(

@@ -18,7 +18,9 @@
 import * as Reconnector from "..";
 
 const connector = Reconnector.createTCPReonnector({
-    port: 6379
+    host: "127.0.0.1",
+    port: 6379,
+    connectTimeout: 2000
 });
 
 connector.on("connected", function() {
