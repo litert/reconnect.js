@@ -32,6 +32,10 @@ connector.on("connected", function() {
     c.on("data", function(data) {
 
         console.log(data.toString());
+
+    }).on("end", function() {
+
+        console.log("Ended.");
     });
 
     c.write("AUTH redis-passwd\r\n");
@@ -45,6 +49,8 @@ connector.on("connected", function() {
     c.write("GET a\r\n");
 
     c.write("MGET d b\r\n");
+
+    setTimeout(() => connector.close(), 5000);
 
 }).on("error", function(e) {
 

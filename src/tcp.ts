@@ -83,10 +83,9 @@ implements ConnectionProvider<$Net.Socket, NodeJS.ErrnoException> {
 
     public close(): void {
 
-        if (this._conn && !this._conn.destroyed) {
+        if (this._conn && this._conn.writable) {
 
-            this._conn.destroy();
-            delete this._conn;
+            this._conn.end();
         }
     }
 
